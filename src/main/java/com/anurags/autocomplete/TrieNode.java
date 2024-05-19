@@ -7,11 +7,7 @@ public class TrieNode {
   HashMap<Character, TrieNode> children = new HashMap<Character, TrieNode>();
   PriorityQueue<TrieNode> order = new PriorityQueue<>(new Comparator<TrieNode>() {
     public int compare(TrieNode a, TrieNode b) {
-      if (a.wordCount != b.wordCount) {
-        return a.wordCount - b.wordCount;
-      } else {
-        return a.wordsAhead - b.wordsAhead;
-      }
+      return b.wordsAhead - a.wordsAhead;
     }
   });
   int wordsAhead;

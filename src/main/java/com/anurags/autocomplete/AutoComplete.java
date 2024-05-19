@@ -11,22 +11,32 @@ class AutoComplete implements AutoCompleteInterface {
   }
 
   public void feedFile(String fileName) {
-    try{
-      ClassLoader classLoader = getClass().getClassLoader();
-      File file = new File(classLoader.getResource("fileName").getFile());
-      InputStream inputStream = new FileInputStream(file);
-
-      BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
+    InputStream inputStream = Main.class.getClassLoader().getResourceAsStream(fileName);
+    if(inputStream == null) {
+      System.out.println("File not found");
+      return;
+    }
+    try(BufferedReader br = new BufferedReader(new java.io.InputStreamReader(inputStream))) {
       String line;
-      while ((line = br.readLine()) != null) {
+      while((line = br.readLine()) != null) {
         insert(line);
       }
-      br.close();
       System.out.println("File " + fileName + " has been read successfully.");
-    } catch (Exception e) {
-      System.err.println("Error: " + e.getMessage());
-
+    } catch (IOException e) {
+      e.printStackTrace();
     }
+  }
+
+  public void printTrie() {
+      Queue<TrieNode> q = new LinkedList<>();
+      q.add(root);
+      while (!q.isEmpty()) {
+        TrieNode current = q.poll();
+        System.out.println(current.c + " " + current.wordCount + " " + current.wordsAhead);
+        for (TrieNode node : current.order) {
+        q.add(node);
+        }
+      }
   }
 
   public void insert(String word) {
@@ -48,15 +58,17 @@ class AutoComplete implements AutoCompleteInterface {
     return search(prefix, 5);
   }
   public List<String> search(String prefix, int count) {
-    List<String> result = new ArrayList<>();
+    // only return count number of words with maximum wordCount or wordsAhead
+
     TrieNode current = root;
     for (int i = 0; i < prefix.length(); i++) {
       char c = prefix.charAt(i);
       if (!current.children.containsKey(c)) {
-        return result;
+      return new ArrayList<String>();
       }
       current = current.children.get(c);
     }
+    List<String> result = new ArrayList<>();
     dfs(current, prefix, result, count);
     return result;
   }
@@ -69,10 +81,11 @@ class AutoComplete implements AutoCompleteInterface {
     if (count == 0) {
       return;
     }
-    for (TrieNode child : current.order) {
-      dfs(child, prefix + child.c, result, count);
+    for (TrieNode node : current.order) {
+      dfs(node, prefix + node.c, result, count);
     }
   }
+
   public void acceptSuggestion(String word) {
     insert(word);
   }
